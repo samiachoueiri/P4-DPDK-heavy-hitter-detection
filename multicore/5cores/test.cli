@@ -1,0 +1,42 @@
+# Example command line:
+#       ./build/examples/dpdk-pipeline -l0-1 -- -s ./examples/pipeline/examples/l2fwd.cli
+#
+# Once the application has started, the command to get the CLI prompt is:
+#       telnet 0.0.0.0 8086
+
+;
+; Pipeline code generation & shared object library build.
+;
+pipeline codegen /home/ubuntu/dpdk/examples/pipeline/examples/test.spec /tmp/test.c
+pipeline libbuild /tmp/test.c /tmp/test.so
+
+;
+; List of DPDK devices.
+;
+; Note: Customize the parameters below to match your setup.
+;
+
+;Default ring size is 16384
+;mempool <mempool_name> meta <mbuf_private_size> pkt <pkt_buffer_size> pool <pool_size> cache <cache_size> numa <numa_node>
+mempool MEMPOOL0 meta 0 pkt 9128 pool 128K cache 512 numa 0
+ethdev 0000:07:00.0 rxq 5 1024 MEMPOOL0 txq 5 1024 promiscuous on rss 0 1 2 3 4
+ethdev 0000:08:00.0 rxq 5 1024 MEMPOOL0 txq 5 1024 promiscuous on rss 0 1 2 3 4
+
+;
+; List of pipelines.
+;
+pipeline PIPELINE0 build lib /tmp/test.so io /home/ubuntu/dpdk/examples/pipeline/examples/ethdev.io numa 0
+pipeline PIPELINE1 build lib /tmp/test.so io /home/ubuntu/dpdk/examples/pipeline/examples/ethdev2.io numa 0
+pipeline PIPELINE2 build lib /tmp/test.so io /home/ubuntu/dpdk/examples/pipeline/examples/ethdev3.io numa 0
+pipeline PIPELINE3 build lib /tmp/test.so io /home/ubuntu/dpdk/examples/pipeline/examples/ethdev4.io numa 0
+pipeline PIPELINE4 build lib /tmp/test.so io /home/ubuntu/dpdk/examples/pipeline/examples/ethdev5.io numa 0
+
+;
+; Pipelines-to-threads mapping.
+;
+pipeline PIPELINE0 enable thread 1
+pipeline PIPELINE1 enable thread 2
+pipeline PIPELINE2 enable thread 3
+pipeline PIPELINE3 enable thread 4
+pipeline PIPELINE4 enable thread 5
+
